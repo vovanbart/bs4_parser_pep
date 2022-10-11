@@ -16,7 +16,7 @@ from utils import find_tag, get_response
 
 def whats_new(session):
     if get_response(session, WHATS_NEW_URL) is None:
-         raise KeyError('Не получен ответ')
+        raise KeyError('Не получен ответ')
     response = get_response(session, WHATS_NEW_URL)
     soup = BeautifulSoup(response.text, features=LXML)
     main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
@@ -43,7 +43,7 @@ def whats_new(session):
 
 def latest_versions(session):
     if get_response(session, MAIN_DOC_URL) is None:
-         raise KeyError('Не получен ответ')
+        raise KeyError('Не получен ответ')
     response = get_response(session, MAIN_DOC_URL)
     soup = BeautifulSoup(response.text, features=LXML)
     sidebar = find_tag(soup, 'div', attrs={'class': 'sphinxsidebarwrapper'})
@@ -71,7 +71,7 @@ def latest_versions(session):
 
 def download(session):
     if get_response(session, DOWNLOADS_URL) is None:
-         raise KeyError('Не получен ответ')
+        raise KeyError('Не получен ответ')
     response = get_response(session, DOWNLOADS_URL)
     soup = BeautifulSoup(response.text, features=LXML)
     main_tag = find_tag(soup, 'div', attrs={'role': 'main'})
