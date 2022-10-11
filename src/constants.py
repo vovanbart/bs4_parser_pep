@@ -21,3 +21,4 @@ LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
 DT_FORMAT = '%d.%m.%Y %H:%M:%S'
 WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
 DOWNLOADS_URL = urljoin(MAIN_DOC_URL, 'download.html')
+LXML = 'lxml'
