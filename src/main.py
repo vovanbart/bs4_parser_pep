@@ -121,7 +121,7 @@ def pep(session):
                     f'Cтатус в карточке: {status}\n'
                     f'Ожидаемые статусы: {EXPECTED_STATUS[status_in_page]}'
                 )
-                raise KeyError('Получен неожиданный статус')  
+                raise KeyError('Получен неожиданный статус')
         except KeyError:
             logging.warning('Получен некорректный статус')
         else:
