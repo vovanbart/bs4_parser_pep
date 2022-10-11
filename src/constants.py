@@ -1,5 +1,6 @@
 from pathlib import Path
 from urllib.parse import urljoin
+from outputs import pretty_output, file_output, default_output
 
 MAIN_DOC_URL = 'https://docs.python.org/3/'
 PEP_URL = 'https://peps.python.org/'
@@ -21,3 +22,9 @@ LOG_FORMAT = '"%(asctime)s - [%(levelname)s] - %(message)s"'
 DT_FORMAT = '%d.%m.%Y %H:%M:%S'
 WHATS_NEW_URL = urljoin(MAIN_DOC_URL, 'whatsnew/')
 DOWNLOADS_URL = urljoin(MAIN_DOC_URL, 'download.html')
+CHOICES = {
+        'pretty': pretty_output,
+        'file': file_output,
+        None: default_output
+    }
+LXML = 'lxml'

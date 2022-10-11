@@ -4,16 +4,10 @@ import logging
 
 from prettytable import PrettyTable
 
-from constants import BASE_DIR, DATETIME_FORMAT
+from constants import BASE_DIR, DATETIME_FORMAT, CHOICES
 
 
 def control_output(results, cli_args):
-    CHOICES = {
-        'pretty': pretty_output,
-        'file': file_output,
-        None: default_output
-    }
-
     CHOICES[cli_args.output](results, cli_args)
 
 

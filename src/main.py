@@ -9,14 +9,16 @@ from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
 from constants import (BASE_DIR, DOWNLOADS_URL, EXPECTED_STATUS, MAIN_DOC_URL,
-                       PEP_URL, WHATS_NEW_URL)
+                       PEP_URL, WHATS_NEW_URL, LXML)
 from outputs import control_output
 from utils import find_tag, get_response
 
 
 def whats_new(session):
+    if get_response(session, WHATS_NEW_URL) == None:
+        raise KeyError('Не получен ответ')
     response = get_response(session, WHATS_NEW_URL)
-    soup = BeautifulSoup(response.text, features='lxml')
+    soup = BeautifulSoup(response.text, features=LXML)
     main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
     div_with_ul = find_tag(main_div, 'div', attrs={'class': 'toctree-wrapper'})
     sections_by_python = div_with_ul.find_all('li',
@@ -29,7 +31,7 @@ def whats_new(session):
         response = get_response(session, version_link)
         if response is None:
             continue
-        soup = BeautifulSoup(response.text, features='lxml')
+        soup = BeautifulSoup(response.text, features=LXML)
         h1 = find_tag(soup, 'h1')
         dl = find_tag(soup, 'dl')
         dl_text = dl.text.replace('\n', ' ')
@@ -40,8 +42,10 @@ def whats_new(session):
 
 
 def latest_versions(session):
+    if get_response(session, MAIN_DOC_URL) == None:
+        raise KeyError('Не получен ответ')
     response = get_response(session, MAIN_DOC_URL)
-    soup = BeautifulSoup(response.text, features='lxml')
+    soup = BeautifulSoup(response.text, features=LXML)
 
     sidebar = find_tag(soup, 'div', attrs={'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
@@ -67,8 +71,10 @@ def latest_versions(session):
 
 
 def download(session):
+    if get_response(session, DOWNLOADS_URL) == None:
+        raise KeyError('Не получен ответ')
     response = get_response(session, DOWNLOADS_URL)
-    soup = BeautifulSoup(response.text, features='lxml')
+    soup = BeautifulSoup(response.text, features=LXML)
     main_tag = find_tag(soup, 'div', attrs={'role': 'main'})
     table_tag = find_tag(main_tag, 'table', attrs={'class': 'docutils'})
     pdf_a4_tag = find_tag(table_tag, 'a',
@@ -87,7 +93,7 @@ def download(session):
 
 def pep(session):
     response = get_response(session, PEP_URL)
-    soup = BeautifulSoup(response.text, features='lxml')
+    soup = BeautifulSoup(response.text, features=LXML)
 
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tbody_tag = find_tag(section_tag, 'tbody')
@@ -100,7 +106,7 @@ def pep(session):
         a_tag = find_tag(tr_tag, 'a', attrs={'class': 'reference external'})
         pep_url = urljoin(PEP_URL, a_tag['href'])
         response = get_response(session, pep_url)
-        soup = BeautifulSoup(response.text, features='lxml')
+        soup = BeautifulSoup(response.text, features=LXML)
         dl_tag = find_tag(soup, 'dl',
                           attrs={'class': 'rfc2822 field-list simple'})
         dd_tag = find_tag(
