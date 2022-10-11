@@ -116,7 +116,12 @@ def pep(session):
         status_in_page = find_tag(tr_tag, 'td').string[1:]
         try:
             if status not in EXPECTED_STATUS[status_in_page]:
-                raise KeyError('Получен неожиданный статус')
+                logging.info(
+                    f'Несовпадающие статусы:\n {pep_url}\n'
+                    f'Cтатус в карточке: {status}\n'
+                    f'Ожидаемые статусы: {EXPECTED_STATUS[status_in_page]}'
+                )
+                raise KeyError('Получен неожиданный статус')  
         except KeyError:
             logging.warning('Получен некорректный статус')
         else:
