@@ -9,6 +9,8 @@ from typing import List, Tuple
 from requests_cache import CachedSession, ALL_METHODS
 from requests_mock import Adapter
 
+from src.constants import BASE_DIR
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 SRC_DIR = BASE_DIR / 'src'
 sys.path.append(str(BASE_DIR))
