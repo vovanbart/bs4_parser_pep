@@ -9,16 +9,14 @@ from tqdm import tqdm
 
 from configs import configure_argument_parser, configure_logging
 from constants import (BASE_DIR, DOWNLOADS_URL, EXPECTED_STATUS, MAIN_DOC_URL,
-                       PEP_URL, WHATS_NEW_URL, LXML)
+                       PEP_URL, WHATS_NEW_URL)
 from outputs import control_output
 from utils import find_tag, get_response
 
 
 def whats_new(session):
-    if get_response(session, WHATS_NEW_URL) is None:
-        raise KeyError('Не получен ответ')
     response = get_response(session, WHATS_NEW_URL)
-    soup = BeautifulSoup(response.text, features=LXML)
+    soup = BeautifulSoup(response.text, features='lxml')
     main_div = find_tag(soup, 'section', attrs={'id': 'what-s-new-in-python'})
     div_with_ul = find_tag(main_div, 'div', attrs={'class': 'toctree-wrapper'})
     sections_by_python = div_with_ul.find_all('li',
@@ -31,7 +29,7 @@ def whats_new(session):
         response = get_response(session, version_link)
         if response is None:
             continue
-        soup = BeautifulSoup(response.text, features=LXML)
+        soup = BeautifulSoup(response.text, features='lxml')
         h1 = find_tag(soup, 'h1')
         dl = find_tag(soup, 'dl')
         dl_text = dl.text.replace('\n', ' ')
@@ -42,11 +40,8 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    if get_response(session, MAIN_DOC_URL) is None:
-        raise KeyError('Не получен ответ')
     response = get_response(session, MAIN_DOC_URL)
-    soup = BeautifulSoup(response.text, features=LXML)
-
+    soup = BeautifulSoup(response.text, features='lxml')
     sidebar = find_tag(soup, 'div', attrs={'class': 'sphinxsidebarwrapper'})
     ul_tags = sidebar.find_all('ul')
     for ul in ul_tags:
@@ -71,10 +66,8 @@ def latest_versions(session):
 
 
 def download(session):
-    if get_response(session, DOWNLOADS_URL) is None:
-        raise KeyError('Не получен ответ')
     response = get_response(session, DOWNLOADS_URL)
-    soup = BeautifulSoup(response.text, features=LXML)
+    soup = BeautifulSoup(response.text, features='lxml')
     main_tag = find_tag(soup, 'div', attrs={'role': 'main'})
     table_tag = find_tag(main_tag, 'table', attrs={'class': 'docutils'})
     pdf_a4_tag = find_tag(table_tag, 'a',
@@ -93,8 +86,7 @@ def download(session):
 
 def pep(session):
     response = get_response(session, PEP_URL)
-    soup = BeautifulSoup(response.text, features=LXML)
-
+    soup = BeautifulSoup(response.text, features='lxml')
     section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
     tbody_tag = find_tag(section_tag, 'tbody')
     tr_tags = tbody_tag.find_all('tr')
@@ -106,7 +98,7 @@ def pep(session):
         a_tag = find_tag(tr_tag, 'a', attrs={'class': 'reference external'})
         pep_url = urljoin(PEP_URL, a_tag['href'])
         response = get_response(session, pep_url)
-        soup = BeautifulSoup(response.text, features=LXML)
+        soup = BeautifulSoup(response.text, features='lxml')
         dl_tag = find_tag(soup, 'dl',
                           attrs={'class': 'rfc2822 field-list simple'})
         dd_tag = find_tag(
@@ -116,12 +108,14 @@ def pep(session):
         status_in_page = find_tag(tr_tag, 'td').string[1:]
         try:
             if status not in EXPECTED_STATUS[status_in_page]:
+                if (len(status_in_page) > 2 or
+                        EXPECTED_STATUS[status_in_page] is None):
+                    raise KeyError('Получен неожиданный статус')
                 logging.info(
                     f'Несовпадающие статусы:\n {pep_url}\n'
                     f'Cтатус в карточке: {status}\n'
                     f'Ожидаемые статусы: {EXPECTED_STATUS[status_in_page]}'
                 )
-                raise KeyError('Получен неожиданный статус')
         except KeyError:
             logging.warning('Получен некорректный статус')
         else:
