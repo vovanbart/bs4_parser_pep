@@ -15,7 +15,7 @@ from utils import find_tag, get_response
 
 
 def whats_new(session):
-    if get_response(session, WHATS_NEW_URL) == None:
+    if get_response(session, WHATS_NEW_URL) is None:
         raise KeyError('Не получен ответ')
     response = get_response(session, WHATS_NEW_URL)
     soup = BeautifulSoup(response.text, features=LXML)
@@ -42,7 +42,7 @@ def whats_new(session):
 
 
 def latest_versions(session):
-    if get_response(session, MAIN_DOC_URL) == None:
+    if get_response(session, MAIN_DOC_URL) is None:
         raise KeyError('Не получен ответ')
     response = get_response(session, MAIN_DOC_URL)
     soup = BeautifulSoup(response.text, features=LXML)
@@ -71,7 +71,7 @@ def latest_versions(session):
 
 
 def download(session):
-    if get_response(session, DOWNLOADS_URL) == None:
+    if get_response(session, DOWNLOADS_URL) is None:
         raise KeyError('Не получен ответ')
     response = get_response(session, DOWNLOADS_URL)
     soup = BeautifulSoup(response.text, features=LXML)
