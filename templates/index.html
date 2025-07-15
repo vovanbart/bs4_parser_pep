@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}PEP Парсер — Главная{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+
+    <form method="post" class="card p-4 mb-4 shadow-sm">
+      <h2 class="h5 mb-3">Выберите режим работы парсера</h2>
+      <div class="mb-3">
+        <label for="mode" class="form-label">Режим</label>
+        <select id="mode" name="mode" class="form-select" required>
+          {% for m in modes %}
+          <option value="{{ m }}" {% if request.form.mode == m %}selected{% endif %}>
+            {{ m }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="clear_cache" name="clear_cache" value="1"
+               {% if request.form.clear_cache %}checked{% endif %}>
+        <label class="form-check-label" for="clear_cache">
+          Очистить HTTP-кеш перед запуском
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">Запустить</button>
+    </form>
+
+    {% if error %}
+    <div class="alert alert-danger shadow-sm">
+      <strong>Ошибка:</strong> {{ error }}
+    </div>
+    {% elif results %}
+    <div class="table-responsive shadow-sm">
+      <table class="table table-striped mb-0">
+        <thead class="table-light">
+          <tr>
+            {% for col in results[0] %}
+            <th scope="col">{{ col }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in results[1:] %}
+          <tr>
+            {% for cell in row %}
+            <td>{{ cell }}</td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

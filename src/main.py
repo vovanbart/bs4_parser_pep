@@ -7,11 +7,11 @@ import requests_cache
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from configs import configure_argument_parser, configure_logging
+from src.configs import configure_argument_parser, configure_logging
 from constants import (BASE_DIR, DOWNLOADS_URL, EXPECTED_STATUS, MAIN_DOC_URL,
                        PEP_URL, WHATS_NEW_URL, LXML)
-from outputs import control_output
-from utils import find_tag, get_response
+from src.outputs import control_output
+from src.utils import find_tag, get_response
 
 
 def whats_new(session):
@@ -69,7 +69,11 @@ def latest_versions(session):
     return results
 
 
-def download(session):
+def download(session) -> str:
+    """
+    Скачивает PDF-архив в папку downloads/
+    и возвращает абсолютный путь к файлу.
+    """
     if get_response(session, DOWNLOADS_URL) is None:
         raise KeyError('Не получен ответ')
     response = get_response(session, DOWNLOADS_URL)
@@ -78,56 +82,55 @@ def download(session):
     table_tag = find_tag(main_tag, 'table', attrs={'class': 'docutils'})
     pdf_a4_tag = find_tag(table_tag, 'a',
                           attrs={'href': re.compile(r'.+pdf-a4\.zip$')})
-    pdf_a4_link = pdf_a4_tag['href']
-    archive_url = urljoin(DOWNLOADS_URL, pdf_a4_link)
+    archive_url = urljoin(DOWNLOADS_URL, pdf_a4_tag['href'])
     filename = archive_url.split('/')[-1]
     downloads_dir = BASE_DIR / 'downloads'
     downloads_dir.mkdir(exist_ok=True)
     archive_path = downloads_dir / filename
+
+    # собственно скачиваем
     response = session.get(archive_url)
-    with open(archive_path, 'wb') as file:
-        file.write(response.content)
+    with open(archive_path, 'wb') as f:
+        f.write(response.content)
+
     logging.info(f'Архив был загружен и сохранён: {archive_path}')
+    return str(archive_path)  # <-- возвращаем путь
 
 
 def pep(session):
-    response = get_response(session, PEP_URL)
+    # 1) URL числового индекса
+    numerical_url = urljoin(PEP_URL, 'numerical/')
+    response = get_response(session, numerical_url)
+    if response is None:
+        raise KeyError(f'Не получен ответ от {numerical_url}')
     soup = BeautifulSoup(response.text, features=LXML)
-    section_tag = find_tag(soup, 'section', attrs={'id': 'numerical-index'})
-    tbody_tag = find_tag(section_tag, 'tbody')
-    tr_tags = tbody_tag.find_all('tr')
-    results = [('Cтатус', 'Количество')]
-    pep_sum = defaultdict(list)
-    total_sum = 0
-    for tr_tag in tqdm(tr_tags):
-        total_sum += 1
-        a_tag = find_tag(tr_tag, 'a', attrs={'class': 'reference external'})
-        pep_url = urljoin(PEP_URL, a_tag['href'])
-        response = get_response(session, pep_url)
-        soup = BeautifulSoup(response.text, features=LXML)
-        dl_tag = find_tag(soup, 'dl',
-                          attrs={'class': 'rfc2822 field-list simple'})
-        dd_tag = find_tag(
-            dl_tag, 'dt', attrs={'class': 'field-even'}
-        ).find_next_sibling('dd')
-        status = dd_tag.string
-        status_in_page = find_tag(tr_tag, 'td').string[1:]
-        try:
-            if status not in EXPECTED_STATUS[status_in_page]:
-                if (len(status_in_page) > 2 or
-                        EXPECTED_STATUS[status_in_page] is None):
-                    raise KeyError('Получен неожиданный статус')
-                logging.info(
-                    f'Несовпадающие статусы:\n {pep_url}\n'
-                    f'Cтатус в карточке: {status}\n'
-                    f'Ожидаемые статусы: {EXPECTED_STATUS[status_in_page]}'
-                )
-        except KeyError:
-            logging.warning('Получен некорректный статус')
-        else:
-            pep_sum[status] = pep_sum.get(status, 0) + 1
-    results.extend(pep_sum.items())
-    results.append(('Total: ', total_sum))
+
+    # 2) Находим первую таблицу (там заголовок + строки PEP)
+    table = soup.find('table')
+    if table is None:
+        raise KeyError('Не найдена таблица PEP на странице numerical/')
+    rows = table.find_all('tr')
+    if len(rows) <= 1:
+        raise KeyError('В таблице нет строк с PEP')
+
+    # 3) Считаем статусы
+    counts = defaultdict(int)
+    total = 0
+    # Пропускаем заголовок таблицы (rows[0])
+    for tr in rows[1:]:
+        cols = tr.find_all('td')
+        # Формат: <td>Статус</td><td>PEP номер</td><td>Название</td><td>Авторы</td>
+        if not cols or len(cols) < 1:
+            continue
+        status = cols[0].get_text(strip=True)
+        counts[status] += 1
+        total += 1
+
+    # 4) Собираем результат в виде списка кортежей
+    results = [('Статус', 'Количество')]
+    for status, num in counts.items():
+        results.append((status, num))
+    results.append(('Total', total))
     return results
 
 

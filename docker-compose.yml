@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  pep-parser:
+    build: .
+    container_name: bs4_parser_pep
+    restart: always
+    # Порт, на котором ваше Flask-приложение слушает запросы
+    ports:
+      - "8000:8000"
+    environment:
+      # В production поставьте «production»
+      - FLASK_ENV=development
+    # Если хотите править локально без пересборки образа, раскомментируйте:
+    # volumes:
+    #   - ./:/app:rw
+
+    # Пример для Traefik (если используете его вместо nginx):
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.pep.rule=Host(`docs.vashsite.ru`) && PathPrefix(`/pep`)"
+    #   - "traefik.http.routers.pep.entrypoints=websecure"
+    #   - "traefik.http.routers.pep.tls.certresolver=le"
+    #   - "traefik.http.services.pep.loadbalancer.server.port=8000"
+    # networks:
+    #   - web
+
+# Для Traefik создайте внешнюю сеть «web»:
+# docker network create web
+# networks:
+#   web:
+#     external: true
